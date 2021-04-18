@@ -56,26 +56,76 @@ population_graph
 import matplotlib.style as style
 style.use('default')
 
+years = map(lambda y: str(y), list(range(1996,2015)))
 
-indicators = ['GDP per capita (current US$)', 'GNI per capita, Atlas method (current US$)']
+indicators = ['GDP per capita (current US$)', 'GDP per capita, PPP (current international $)', 'GNI (current US$)', 'GNI, PPP (current international $)']
+
+
+
 countries = ['World', 'East Asia & Pacific']
 
-world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[0]]) & total['CountryName'].isin(countries)]
 
+countries_gdp = total[total['IndicatorName'].isin([indicators[0]]) & ~total['CountryName'].isin(world_region_and_highest)]
+top_5_countries = countries_gdp.nlargest(5, 'sum')
+bottom_5_countries = countries_gdp.nsmallest(5, 'sum')
+
+world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[0]])]
+
+world_region_and_highest = countries + top_5_countries['CountryName'].tolist()
+print(world_region_and_highest)
 fig, ax = plt.subplots()
+world_vs_asia_GDP = world_vs_asia_GDP[world_vs_asia_GDP['CountryName'].isin(world_region_and_highest)]
 for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
     del world_vs_asia_GDP[c]
+world_vs_asia_GDP = world_vs_asia_GDP[years]
 world_vs_asia_GDP = world_vs_asia_GDP.T
-world_vs_asia_GDP.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title="World GDP vs East Asia & Pacific")
-ax.legend(countries)
+world_vs_asia_GDP.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[0])
+ax.legend(world_region_and_highest)
 
-fig, ax = plt.subplots()
-world_vs_asia_GNI = total[total['IndicatorName'].isin([indicators[1]]) & total['CountryName'].isin(countries)]
+world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[0]])]
+
+world_region_and_lowest = countries + bottom_5_countries['CountryName'].tolist()
+fig2, ax2 = plt.subplots()
+world_vs_asia_GDP = world_vs_asia_GDP[world_vs_asia_GDP['CountryName'].isin(world_region_and_lowest)]
 for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
-    del world_vs_asia_GNI[c]
-world_vs_asia_GNI = world_vs_asia_GNI.T
-world_vs_asia_GNI.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title="World GNI vs East Asia & Pacific")
-ax.legend(countries)
+    del world_vs_asia_GDP[c]
+world_vs_asia_GDP = world_vs_asia_GDP[years]
+world_vs_asia_GDP = world_vs_asia_GDP.T
+world_vs_asia_GDP.plot(lw=2, ax=ax2, colormap='jet', marker='.', markersize=10, title=indicators[0])
+ax2.legend(world_region_and_lowest)
+
+
+# Sadly no data :(
+# fig, ax = plt.subplots()
+# world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[1]]) & total['CountryName'].isin(countries)]
+# print(world_vs_asia_GDP)
+# for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+#     del world_vs_asia_GDP[c]
+# world_vs_asia_GDP = world_vs_asia_GDP[years]
+# print(world_vs_asia_GDP)
+# world_vs_asia_GDP = world_vs_asia_GDP.T
+# world_vs_asia_GDP.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[1])
+# ax.legend(countries)
+
+# Sadly no data :(
+# fig, ax = plt.subplots()
+# world_vs_asia_GNI = total[total['IndicatorName'].isin([indicators[2]]) & total['CountryName'].isin(countries)]
+# for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+#     del world_vs_asia_GNI[c]
+# world_vs_asia_GNI = world_vs_asia_GNI[years]
+# world_vs_asia_GNI = world_vs_asia_GNI.T
+# world_vs_asia_GNI.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[2])
+# ax.legend(countries)
+
+# Sadly no data :(
+# fig, ax = plt.subplots()
+# world_vs_asia_GNI = total[total['IndicatorName'].isin([indicators[3]]) & total['CountryName'].isin(countries)]
+# for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+#     del world_vs_asia_GNI[c]
+# world_vs_asia_GNI = world_vs_asia_GNI[years]
+# world_vs_asia_GNI = world_vs_asia_GNI.T
+# world_vs_asia_GNI.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[3])
+# ax.legend(countries)
 
 
 print(world_vs_asia_GDP.iloc)
