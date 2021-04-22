@@ -7,7 +7,7 @@ import seaborn as sns
 from scipy.stats.stats import pearsonr 
 
 # Read original file
-original=pd.read_csv('./dataset/EdStatsData.csv')
+original=pd.read_csv('../dataset/EdStatsData.csv')
 
 # Arrange the original data
 original=original.drop('IndicatorCode',axis=1)
