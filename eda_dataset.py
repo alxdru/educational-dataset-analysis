@@ -56,78 +56,171 @@ population_graph
 import matplotlib.style as style
 style.use('default')
 
-years = map(lambda y: str(y), list(range(1996,2015)))
+years = list(map(lambda y: str(y), list(range(1996,2015))))
 
-indicators = ['GDP per capita (current US$)', 'GDP per capita, PPP (current international $)', 'GNI (current US$)', 'GNI, PPP (current international $)']
+indicators = [
+    "GDP per capita (current US$)",
+    "GDP per capita, PPP (current international $)", 
+    "GNI (current US$)", 
+    "GNI, PPP (current international $)",
+    "Literacy rate, population 25-64 years, both sexes (%)",
+    "Adult literacy rate, population 15+ years, both sexes (%)",
+    "Youth literacy rate, population 15-24 years, both sexes (%)",
+    "Unemployment, total (% of total labor force)",
+    "Internet users (per 100 people)",
+    "Personal computers (per 100 people)",
+    "Pupil-teacher ratio in tertiary education (headcount basis)",
+    "School life expectancy, tertiary, both sexes (years)",
+    "Labor force with advanced education (% of total)"
+    ]
+
+countries_macro = ['World', 'East Asia & Pacific']
+
+########## Plotting list of indicators
+
+for indicator in indicators:
+
+    countries = total[total['IndicatorName'].isin([indicator]) & ~total['CountryName'].isin(countries_macro)]
+    top_5_countries = countries.nlargest(5, 'sum')
+    bottom_5_countries = countries.nsmallest(5, 'sum')
+
+    ## Top 5
+    world_vs_asia = total[total['IndicatorName'].isin([indicator])]
+
+    world_region_and_highest = countries_macro + top_5_countries['CountryName'].tolist()
+    fig, ax = plt.subplots()
+    world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_highest)]
+    for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+        del world_vs_asia[c]
+    world_vs_asia = world_vs_asia[years]
+    world_vs_asia = world_vs_asia.T
+    world_vs_asia.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title="{0} with top 5 countries".format(indicator))
+    ax.legend(world_region_and_highest)
+
+    ## Bottom 5
+    world_vs_asia = total[total['IndicatorName'].isin([indicator])]
+
+    world_region_and_lowest = countries_macro + bottom_5_countries['CountryName'].tolist()
+    fig2, ax2 = plt.subplots()
+    world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_lowest)]
+    for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+        del world_vs_asia[c]
+    world_vs_asia = world_vs_asia[years]
+    world_vs_asia = world_vs_asia.T
+    world_vs_asia.plot(lw=2, ax=ax2, colormap='jet', marker='.', markersize=10, title="{0} with bottom 5 countries".format(indicator))
+    ax2.legend(world_region_and_lowest)
 
 
+# ########## GDP per capita, PPP (current international $)
 
-countries = ['World', 'East Asia & Pacific']
+# countries = total[total['IndicatorName'].isin([indicators[1]]) & ~total['CountryName'].isin(countries_macro)]
+# top_5_countries = countries.nlargest(5, 'sum')
+# bottom_5_countries = countries.nsmallest(5, 'sum')
 
+# world_vs_asia = total[total['IndicatorName'].isin([indicators[1]])]
 
-countries_gdp = total[total['IndicatorName'].isin([indicators[0]]) & ~total['CountryName'].isin(world_region_and_highest)]
-top_5_countries = countries_gdp.nlargest(5, 'sum')
-bottom_5_countries = countries_gdp.nsmallest(5, 'sum')
-
-world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[0]])]
-
-world_region_and_highest = countries + top_5_countries['CountryName'].tolist()
-print(world_region_and_highest)
-fig, ax = plt.subplots()
-world_vs_asia_GDP = world_vs_asia_GDP[world_vs_asia_GDP['CountryName'].isin(world_region_and_highest)]
-for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
-    del world_vs_asia_GDP[c]
-world_vs_asia_GDP = world_vs_asia_GDP[years]
-world_vs_asia_GDP = world_vs_asia_GDP.T
-world_vs_asia_GDP.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[0])
-ax.legend(world_region_and_highest)
-
-world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[0]])]
-
-world_region_and_lowest = countries + bottom_5_countries['CountryName'].tolist()
-fig2, ax2 = plt.subplots()
-world_vs_asia_GDP = world_vs_asia_GDP[world_vs_asia_GDP['CountryName'].isin(world_region_and_lowest)]
-for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
-    del world_vs_asia_GDP[c]
-world_vs_asia_GDP = world_vs_asia_GDP[years]
-world_vs_asia_GDP = world_vs_asia_GDP.T
-world_vs_asia_GDP.plot(lw=2, ax=ax2, colormap='jet', marker='.', markersize=10, title=indicators[0])
-ax2.legend(world_region_and_lowest)
-
-
-# Sadly no data :(
+# world_region_and_highest = countries_macro + top_5_countries['CountryName'].tolist()
+# print(world_region_and_highest)
 # fig, ax = plt.subplots()
-# world_vs_asia_GDP = total[total['IndicatorName'].isin([indicators[1]]) & total['CountryName'].isin(countries)]
-# print(world_vs_asia_GDP)
+# world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_highest)]
 # for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
-#     del world_vs_asia_GDP[c]
-# world_vs_asia_GDP = world_vs_asia_GDP[years]
-# print(world_vs_asia_GDP)
-# world_vs_asia_GDP = world_vs_asia_GDP.T
-# world_vs_asia_GDP.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[1])
-# ax.legend(countries)
+#     del world_vs_asia[c]
+# world_vs_asia = world_vs_asia[years]
+# world_vs_asia = world_vs_asia.T
+# world_vs_asia.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[1])
+# ax.legend(world_region_and_highest)
 
-# Sadly no data :(
+# plt.show()
+
+
+# world_vs_asia = total[total['IndicatorName'].isin([indicators[1]])]
+
+
+# world_region_and_lowest = countries_macro + bottom_5_countries['CountryName'].tolist()
+# fig2, ax2 = plt.subplots()
+# world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_lowest)]
+# for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+#     del world_vs_asia[c]
+# world_vs_asia = world_vs_asia[years]
+# world_vs_asia = world_vs_asia.T
+# world_vs_asia.plot(lw=2, ax=ax2, colormap='jet', marker='.', markersize=10, title=indicators[1])
+# ax2.legend(world_region_and_lowest)
+
+# plt.show()
+
+
+# ########## GNI (current US$)
+
+# countries = total[total['IndicatorName'].isin([indicators[2]]) & ~total['CountryName'].isin(countries_macro)]
+# top_5_countries = countries.nlargest(5, 'sum')
+# bottom_5_countries = countries.nsmallest(5, 'sum')
+
+# world_vs_asia = total[total['IndicatorName'].isin([indicators[2]])]
+
+# world_region_and_highest = countries_macro + top_5_countries['CountryName'].tolist()
+# print(world_region_and_highest)
 # fig, ax = plt.subplots()
-# world_vs_asia_GNI = total[total['IndicatorName'].isin([indicators[2]]) & total['CountryName'].isin(countries)]
+# world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_highest)]
 # for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
-#     del world_vs_asia_GNI[c]
-# world_vs_asia_GNI = world_vs_asia_GNI[years]
-# world_vs_asia_GNI = world_vs_asia_GNI.T
-# world_vs_asia_GNI.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[2])
-# ax.legend(countries)
+#     del world_vs_asia[c]
+# world_vs_asia = world_vs_asia[years]
+# world_vs_asia = world_vs_asia.T
+# world_vs_asia.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[2])
+# ax.legend(world_region_and_highest)
 
-# Sadly no data :(
+# plt.show()
+
+
+# world_vs_asia = total[total['IndicatorName'].isin([indicators[2]])]
+
+
+# world_region_and_lowest = countries_macro + bottom_5_countries['CountryName'].tolist()
+# fig2, ax2 = plt.subplots()
+# world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_lowest)]
+# for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+#     del world_vs_asia[c]
+# world_vs_asia = world_vs_asia[years]
+# world_vs_asia = world_vs_asia.T
+# world_vs_asia.plot(lw=2, ax=ax2, colormap='jet', marker='.', markersize=10, title=indicators[2])
+# ax2.legend(world_region_and_lowest)
+
+# plt.show()
+
+
+
+# ########### Literacy rate, population 25-64 years, both sexes (%)
+
+
+# countries = total[total['IndicatorName'].isin([indicators[4]]) & ~total['CountryName'].isin(countries_macro)]
+# top_5_countries = countries.nlargest(5, 'sum')
+# bottom_5_countries = countries.nsmallest(5, 'sum')
+
+# world_vs_asia = total[total['IndicatorName'].isin([indicators[4]])]
+
+# world_region_and_highest = countries_macro + top_5_countries['CountryName'].tolist()
+# print(world_region_and_highest)
 # fig, ax = plt.subplots()
-# world_vs_asia_GNI = total[total['IndicatorName'].isin([indicators[3]]) & total['CountryName'].isin(countries)]
+# world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_highest)]
 # for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
-#     del world_vs_asia_GNI[c]
-# world_vs_asia_GNI = world_vs_asia_GNI[years]
-# world_vs_asia_GNI = world_vs_asia_GNI.T
-# world_vs_asia_GNI.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[3])
-# ax.legend(countries)
+#     del world_vs_asia[c]
+# world_vs_asia = world_vs_asia[years]
+# world_vs_asia = world_vs_asia.T
+# world_vs_asia.plot(lw=2, ax=ax, colormap='jet', marker='.', markersize=10, title=indicators[4])
+# ax.legend(world_region_and_highest)
+
+# world_vs_asia = total[total['IndicatorName'].isin([indicators[4]])]
+
+# world_region_and_lowest = countries_macro + bottom_5_countries['CountryName'].tolist()
+# fig2, ax2 = plt.subplots()
+# world_vs_asia = world_vs_asia[world_vs_asia['CountryName'].isin(world_region_and_lowest)]
+# for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0']:
+#     del world_vs_asia[c]
+# world_vs_asia = world_vs_asia[years]
+# world_vs_asia = world_vs_asia.T
+# world_vs_asia.plot(lw=2, ax=ax2, colormap='jet', marker='.', markersize=10, title=indicators[4])
+# ax2.legend(world_region_and_lowest)
 
 
-print(world_vs_asia_GDP.iloc)
+
 
 
