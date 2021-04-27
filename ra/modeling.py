@@ -11,22 +11,24 @@ from random import random
 # Read original file
 total=pd.read_csv('./total.csv')
 
+countries_list = ['World', "East Asia & Pacific", 'China', "Hong Kong", 'Japan', 'Macau', 'Mongolia', "Korea, Dem. People’s Rep.", "North Korea", "South Korea", 'Taiwan', 'Brunei', 'Cambodia', 'Indonesia', 'Malaysia', 'Myanmar', 'Philippines', 'Singapore', 'Thailand', 'Vietnam']
+
 ## First get the variables that I want to use in regression and forecast them
 years = list(map(lambda y: str(y), list(range(1977,2016))))
-
+all_years = []
 indicators = [
     "GDP per capita (current US$)",
-    "GDP per capita, PPP (current international $)", 
-    "GNI (current US$)", 
-    "GNI, PPP (current international $)",
-    "Literacy rate, population 25-64 years, both sexes (%)",
-    "Adult literacy rate, population 15+ years, both sexes (%)",
-    "Youth literacy rate, population 15-24 years, both sexes (%)",
+    # "GDP per capita, PPP (current international $)", 
+    # "GNI (current US$)", 
+    # "GNI, PPP (current international $)",
+    # "Literacy rate, population 25-64 years, both sexes (%)",
+    # "Adult literacy rate, population 15+ years, both sexes (%)",
+    # "Youth literacy rate, population 15-24 years, both sexes (%)",
     "Unemployment, total (% of total labor force)",
-    "Internet users (per 100 people)",
-    "Personal computers (per 100 people)",
-    "Pupil-teacher ratio in tertiary education (headcount basis)",
-    "School life expectancy, tertiary, both sexes (years)",
+    # "Internet users (per 100 people)",
+    # "Personal computers (per 100 people)",
+    # "Pupil-teacher ratio in tertiary education (headcount basis)",
+    # "School life expectancy, tertiary, both sexes (years)",
     "Labor force with advanced education (% of total)"
     ]
 
@@ -39,13 +41,12 @@ for indicator in indicators:
     top_5_countries = countries.nlargest(5, 'sum')
     bottom_5_countries = countries.nsmallest(5, 'sum')
     all_countries = top_5_countries['CountryName'].tolist() + bottom_5_countries['CountryName'].tolist() + countries_macro
+    all_years = list(map(lambda y: str(y), list(range(1977,2031))))
 
-    final_dict[indicator] = []
+    df_record = pd.DataFrame([], columns=['Country'] + all_years)
     world_vs_asia = total[total['IndicatorName'].isin([indicator])]
     for country in all_countries: 
-        dict_record = {
-            'country': country
-        }
+        
         data_country = world_vs_asia[world_vs_asia['CountryName'].isin([country])]
         # print(data_country)
         for c in ['CountryName', 'CountryCode', 'IndicatorName', 'Unnamed: 0', 'sum']:
@@ -60,16 +61,13 @@ for indicator in indicators:
             model_fit = model.fit()
             data_predicted = model_fit.predict(start = len(data_list), end = len(data_list) + 14, typ='levels')
             
-            all_years = list(map(lambda y: str(y), list(range(1977,2031))))
             all_data = data_list + data_predicted.tolist()
-            df_forecast = pd.DataFrame({
-                "year": all_years,
-                "value": all_data
-            })
-            # print(df_forecast)
-            dict_record['values'] = df_forecast 
-            final_dict[indicator].append(dict_record)
 
+            df_forecast = pd.DataFrame([all_data], columns=all_years)
 
-print(final_dict)
+            df_forecast['Country'] = country
+            df_record = df_record.append(df_forecast, ignore_index=True)
+
+    final_dict[indicator] = df_record
+
 

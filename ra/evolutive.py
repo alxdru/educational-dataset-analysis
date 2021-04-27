@@ -12,78 +12,70 @@ from bokeh import sampledata
 import numpy as np
 
 
+def normalize_elem(elem):
+    ranger = 250000 - 400
+    elem = (elem - 400) / ranger
+
+    range2 = 500 - 20
+    return (elem * range2) + 20
 
 def process_data():
-    from bokeh.sampledata.gapminder import fertility, life_expectancy, population, regions
-    sampledata.download()
-    # Make the column names ints not strings for handling
-    columns = list(fertility.columns)
-    years = list(range(int(columns[0]), int(columns[-1])))
-    rename_dict = dict(zip(columns, years))
+    from modeling import final_dict, all_years, countries_list
+    
+    gdp = final_dict["GDP per capita (current US$)"]
+    unemployment = final_dict["Unemployment, total (% of total labor force)"]
+    labor_force = final_dict["Labor force with advanced education (% of total)"]
 
-    fertility = fertility.rename(columns=rename_dict)
-    life_expectancy = life_expectancy.rename(columns=rename_dict)
-    population = population.rename(columns=rename_dict)
-    regions = regions.rename(columns=rename_dict)
+    countries_df = pd.DataFrame({
+        'Country': countries_list
+    })
 
-    regions_list = list(regions.Group.unique())
+    years = list(map(lambda y: int(y), all_years))
 
-    # Turn population into bubble sizes. Use min_size and factor to tweak.
-    scale_factor = 200
-    population_size = np.sqrt(population / np.pi) / scale_factor
-    min_size = 3
-    population_size = population_size.where(population_size >= min_size).fillna(min_size)
+    return gdp, unemployment, labor_force, countries_df, countries_list, years
 
-    return fertility, life_expectancy, population_size, regions, years, regions_list
+gdp_df, unemployment_df, labor_force_df, countries_df, countries_list, years = process_data()
 
-
-fertility_df, life_expectancy_df, population_df_size, regions_df, years, regions_list = process_data()
-
-
-print("date fertilitate", fertility_df)
-print("date life expectenzy", life_expectancy_df)
-print("date population size", population_df_size)
-print("date regions", regions_df)
-print("date years", years)
-print("date regions list", regions_list)
-
-df = pd.concat({'fertility': fertility_df,
-                'life': life_expectancy_df,
-                'population': population_df_size},
+# Normalize GDP for plotting sizes
+for year in years:
+    gdp_df[str(year)] = gdp_df[str(year)].apply(normalize_elem)
+print(gdp_df)
+df = pd.concat({'gdp': gdp_df,
+                'unemployment': unemployment_df,
+                'labor_force': labor_force_df},
                axis=1)
 
-
 data = {}
-
-regions_df.rename({'Group':'region'}, axis='columns', inplace=True)
 for year in years:
-    df_year = df.iloc[:,df.columns.get_level_values(1)==year]
+    df_year = df.iloc[:,df.columns.get_level_values(1)==str(year)]
     df_year.columns = df_year.columns.droplevel(1)
-    data[year] = df_year.join(regions_df.region).reset_index().to_dict('series')
-
+    data[year] = df_year.join(countries_df.Country).reset_index().to_dict('series')
+    del data[year]['index']
+# print(data)
 source = ColumnDataSource(data=data[years[0]])
 
-plot = figure(x_range=(1, 9), y_range=(20, 100), title='World Bank Educational Data', height=300)
+plot = figure(x_range=(0, 10), y_range=(0, 100), title='World Bank Educational Data', height=300)
 plot.xaxis.ticker = SingleIntervalTicker(interval=1)
-plot.xaxis.axis_label = "Children per woman (total fertility)"
-plot.yaxis.ticker = SingleIntervalTicker(interval=20)
-plot.yaxis.axis_label = "Life expectancy at birth (years)"
+plot.xaxis.axis_label = "Unemployment, total (% of total labor force)"
+plot.yaxis.ticker = SingleIntervalTicker(interval=10)
+plot.yaxis.axis_label = "Labor force with advanced education (% of total)"
 
 label = Label(x=1.1, y=18, text=str(years[0]), text_font_size='93px', text_color='#eeeeee')
 plot.add_layout(label)
 
-color_mapper = CategoricalColorMapper(palette=Spectral6, factors=regions_list)
+
+color_mapper = CategoricalColorMapper(palette=Spectral6, factors=countries_list)
 plot.circle(
-    x='fertility',
-    y='life',
-    size='population',
+    x='unemployment',
+    y='labor_force',
+    size='gdp',
     source=source,
-    fill_color={'field': 'region', 'transform': color_mapper},
+    fill_color={'field': 'Country', 'transform': color_mapper},
     fill_alpha=0.8,
     line_color='#7c7e71',
     line_width=0.5,
     line_alpha=0.5,
-    legend_group='region',
+    legend_group='Country',
 )
 plot.add_tools(HoverTool(tooltips="@Country", show_arrow=False, point_policy='follow_mouse'))
 
@@ -123,4 +115,4 @@ layout = layout([
 ], sizing_mode='scale_width')
 
 curdoc().add_root(layout)
-curdoc().title = "Gapminder"
+curdoc().title = "World Bank Data"
