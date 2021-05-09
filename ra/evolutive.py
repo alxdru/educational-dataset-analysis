@@ -6,7 +6,7 @@ from bokeh.io import curdoc
 from bokeh.layouts import layout
 from bokeh.models import (Button, CategoricalColorMapper, ColumnDataSource,
                           HoverTool, Label, SingleIntervalTicker, Slider,)
-from bokeh.palettes import Spectral6
+from bokeh.palettes import Paired12
 from bokeh.plotting import figure
 from bokeh import sampledata
 import numpy as np
@@ -23,8 +23,8 @@ def process_data():
     from modeling import final_dict, all_years, countries_list
     
     gdp = final_dict["GDP per capita (current US$)"]
-    unemployment = final_dict["Unemployment, total (% of total labor force)"]
-    labor_force = final_dict["Labor force with advanced education (% of total)"]
+    unemployment = final_dict["Unemployment total (% of total labor force)"]
+    labor_force = final_dict["Labor force (% of total)"]
 
     countries_df = pd.DataFrame({
         'Country': countries_list
@@ -54,17 +54,17 @@ for year in years:
 # print(data)
 source = ColumnDataSource(data=data[years[0]])
 
-plot = figure(x_range=(0, 10), y_range=(0, 100), title='World Bank Educational Data', height=300)
+plot = figure(x_range=(0, 10), y_range=(0, 1), title='World Bank Educational Data', height=300)
 plot.xaxis.ticker = SingleIntervalTicker(interval=1)
-plot.xaxis.axis_label = "Unemployment, total (% of total labor force)"
+plot.xaxis.axis_label = "Unemployment total (% of total labor force)"
 plot.yaxis.ticker = SingleIntervalTicker(interval=10)
-plot.yaxis.axis_label = "Labor force with advanced education (% of total)"
+plot.yaxis.axis_label = "Labor force (% of total)"
 
 label = Label(x=1.1, y=18, text=str(years[0]), text_font_size='93px', text_color='#eeeeee')
 plot.add_layout(label)
 
 
-color_mapper = CategoricalColorMapper(palette=Spectral6, factors=countries_list)
+color_mapper = CategoricalColorMapper(palette=Paired12, factors=countries_list)
 plot.circle(
     x='unemployment',
     y='labor_force',
@@ -101,7 +101,7 @@ def animate():
     global callback_id
     if button.label == '► Play':
         button.label = '❚❚ Pause'
-        callback_id = curdoc().add_periodic_callback(animate_update, 200)
+        callback_id = curdoc().add_periodic_callback(animate_update, 1000)
     else:
         button.label = '► Play'
         curdoc().remove_periodic_callback(callback_id)

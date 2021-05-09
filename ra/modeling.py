@@ -14,13 +14,20 @@ total=pd.read_csv('./total.csv')
 
 countries_list = ['World', "East Asia & Pacific", 'China', "Hong Kong", 'Japan', 'Macau', 'Mongolia', "Korea, Dem. People’s Rep.", "North Korea", "South Korea", 'Taiwan', 'Brunei', 'Cambodia', 'Indonesia', 'Malaysia', 'Myanmar', 'Philippines', 'Singapore', 'Thailand', 'Vietnam']
 
+# print(total.columns.tolist())
+# Forming Labor force (% of total) = Labor force, total/Population total * 100
+
+# total['Labor force (% of total)'] = total['Labor force total'] / total['Population total'] * 100
+
+
 ## First get the variables that I want to use in regression and forecast them
-years = list(map(lambda y: str(y), list(range(1977,2016))))
+years = list(map(lambda y: str(y), list(range(1970,2016))))
 all_years = []
 indicators = [
     "GDP per capita (current US$)",
-    "Unemployment, total (% of total labor force)",
-    "Labor force with advanced education (% of total)"
+    "Unemployment total (% of total labor force)",
+    "Labor force total",
+    "Population total"
 ]
 
 countries_macro = ['World', 'East Asia & Pacific']
@@ -28,11 +35,8 @@ countries_macro = ['World', 'East Asia & Pacific']
 final_dict = {}
 for indicator in indicators:
 
-    countries = total[total['IndicatorName'].isin([indicator]) & ~total['CountryName'].isin(countries_macro)]
-    top_5_countries = countries.nlargest(5, 'sum')
-    bottom_5_countries = countries.nsmallest(5, 'sum')
-    all_countries = top_5_countries['CountryName'].tolist() + bottom_5_countries['CountryName'].tolist() + countries_macro
-    all_years = list(map(lambda y: str(y), list(range(1977,2031))))
+    all_countries = countries_list
+    all_years = list(map(lambda y: str(y), list(range(1990,2031))))
 
     df_record = pd.DataFrame([], columns=['Country'] + all_years)
     world_vs_asia = total[total['IndicatorName'].isin([indicator])]
@@ -48,28 +52,19 @@ for indicator in indicators:
             
             ## Forecasting additional 15 years as variable candidates for regression
             data_list = data_country.iloc[:,0].tolist()
-            model = ARIMA(data_list, order=(1,1,1))
+            model = ARIMA(data_list, order=(1,0,0))
             model_fit = model.fit()
             data_predicted = model_fit.predict(start = len(data_list), end = len(data_list) + 14, typ='levels')
-            
-            extrapolated_value = math.nan
-            extrapolated_index = None
-            for index, value in enumerate(data_list):
-                if not math.isnan(value):
-                    extrapolated_value = value
-                    extrapolated_index = index
+     
+            all_data = data_list + data_predicted.tolist()
 
-            extrapolation = list(map(lambda y: extrapolated_value, list(range(0,extrapolated_index+1))))
-            del data_list[0:(extrapolated_index+1)]
-            all_data = extrapolation + data_list + data_predicted.tolist()
+            df_forecast = pd.DataFrame([all_data], columns= list(map(lambda y: str(y), list(range(1970,2031)))))
 
-            df_forecast = pd.DataFrame([all_data], columns=all_years)
-            print("For Country: ", country, "For indicator: ",indicator)
-            with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-                display(" following dataframe: ", df_forecast)
             df_forecast['Country'] = country
             df_record = df_record.append(df_forecast, ignore_index=True)
 
     final_dict[indicator] = df_record
 
+final_dict['Labor force (% of total)'] = final_dict['Labor force total'].select_dtypes(exclude='object').div(final_dict['Population total'].select_dtypes(exclude='object'))
 
+print(final_dict)
