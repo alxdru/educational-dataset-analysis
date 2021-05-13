@@ -93,7 +93,7 @@ for indicator in indicators:
         ax2.legend(world_region_and_lowest)
 
 
-# Heatmap with GDP growths per countries
+# Treemaps with GDP growths per countries
 fig, ax = plt.subplots()
 indicator = "GDP per capita (current US$)"
 
@@ -111,7 +111,7 @@ squarify.plot(sizes=df_viz['growths'], label=df_viz['country'], alpha=.8)
 plt.axis('off')
 plt.show() 
 
-# Heatmap with GNI growths per countries
+# Treemaps with GNI growths per countries
 fig, ax = plt.subplots()
 indicator = "GNI (current US$)"
 
