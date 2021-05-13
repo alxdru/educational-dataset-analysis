@@ -4,53 +4,28 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import font_manager, rc
 import seaborn as sns
-from scipy.stats.stats import pearsonr 
+from scipy.stats.stats import pearsonr
+import squarify
 
+countries_macro = ['World', 'East Asia & Pacific']
 # Read original file
 total=pd.read_csv('./total.csv')
 
-# Correlations
-gdp = total[total['IndicatorName']=='GDP per capita (current US$)']
-gni = total[total['IndicatorName']=='GNI per capita, Atlas method (current US$)']
+############## Projection table for percentage of population that has completed the level of education defined by the indicator
+educational_attnmnt = total[total['IndicatorName'].str.contains('Wittgenstein Projection: Percentage of the population age 25\+ by') & total['IndicatorName'].str.contains('Total') & ~total['CountryName'].isin(countries_macro)]
 
-population_by_education_ntertiary = total[total['IndicatorName']=='Population of the official age for post-secondary non-tertiary education, both sexes (number)']
-population_by_education_ntertiary.head()
+educational_attnmnt_pt=pd.pivot_table(educational_attnmnt, index='CountryName', columns='IndicatorName', values=['2025'], dropna=True)
 
-population_by_education_tertiary = total[total['IndicatorName']=='Population of the official age for tertiary education, both sexes (number)']
-population_by_education_tertiary.head()
+educational_attnmnt_pt['sum'] = educational_attnmnt_pt.sum(axis=1)
+educational_attnmnt_pt = educational_attnmnt_pt[educational_attnmnt_pt['sum']!=0]
 
-enrolment_tertiary = total[total['IndicatorName']=='Enrolment in tertiary education, all programmes, both sexes (number)']
-enrolment_tertiary.head()
-
-# Pivot table for teachers on the 3 levels of education
-teachers_all_levels = total[total['IndicatorName'].str.contains('Teachers in') & total['IndicatorName'].str.contains('both sexes')]
-teachers_all_levels_pt=pd.pivot_table(teachers_all_levels, index='CountryCode', columns='IndicatorName', values=['2010'], dropna=True)
-
-teachers_all_levels_pt['sum'] = teachers_all_levels_pt.sum(axis=1)
-teachers_all_levels_pt = teachers_all_levels_pt[teachers_all_levels_pt['sum']!=0]
-
-teachers_all_levels_pt=teachers_all_levels_pt.drop('sum',axis=1)
+educational_attnmnt_pt=educational_attnmnt_pt.drop('sum',axis=1)
 
 # Bar plots for all education levels per each country
-teachers_all_levels_pt=teachers_all_levels_pt[::-1]
+educational_attnmnt_pt=educational_attnmnt_pt[::-1]
 pal=sns.diverging_palette(220, 20, as_cmap=True)
-teachers_graph=teachers_all_levels_pt.plot(kind='barh', stacked=True, figsize=(20,36), colormap=pal, title='Population of Teachers by level of education', legend=True, xlim=(0,10000000))
+teachers_graph=educational_attnmnt_pt.plot(kind='barh', stacked=True, figsize=(20,36), colormap=pal, title='Projection on percentage of population, age 25+, by highest educational attainment per level of education', legend=True, xlim=(0,1))
 teachers_graph
-
-# # Pivot table for Populations of the official ages per levels of education
-# population_all_levels = total[total['IndicatorName'].str.contains('Population of the official age for') & total['IndicatorName'].str.contains('both sexes')]
-# population_all_levels_pt = pd.pivot_table(population_all_levels, index='CountryCode', columns='IndicatorName', values=['2010'], dropna=True)
-
-# population_all_levels_pt['sum'] = population_all_levels_pt.sum(axis=1)
-# population_all_levels_pt = population_all_levels_pt[population_all_levels_pt['sum']!=0]
-
-# population_all_levels_pt = population_all_levels_pt.drop('sum', axis=1)
-
-# # Bar plots for all education levels per each country
-# population_all_levels_pt=population_all_levels_pt[::-1]
-# pal=sns.cubehelix_palette(8, start=2, rot=0, dark=0, light=.95)
-# population_graph=population_all_levels_pt.plot(kind='barh', stacked=True, figsize=(20,36), color=pal, title='Population of the official age for: Lower Secondary, Post-secondary non-tertiary, Pre-Primary, Primary, Secondary, Tertiary, Last grade of primary education, Upper secondary education', legend=False, xlim=(0,10000000))
-# population_graph
 
 # Evolutionary graph for GDP and GNI
 import matplotlib.style as style
@@ -59,18 +34,18 @@ style.use('default')
 years = list(map(lambda y: str(y), list(range(1996,2015))))
 
 indicators = [
-    "Adult literacy rate, population 15+ years, both sexes (%)",
-    "Youth literacy rate, population 15-24 years, both sexes (%)",
-    "Unemployment, total (% of total labor force)",
-    "Internet users (per 100 people)",
-    "Personal computers (per 100 people)"
+    "Early school leavers from primary education both sexes (number)",
+    "Adult literacy rate population 15+ years both sexes (%)",
+    "Youth literacy rate population 15-24 years both sexes (%)",
+    "Unemployment total (% of total labor force)",
+    "GDP per capita (current US$)"
 ]
 
-countries_macro = ['World', 'East Asia & Pacific']
 
 macro_exceptions = [
-    "Adult literacy rate, population 15+ years, both sexes (%)",
-    "Youth literacy rate, population 15-24 years, both sexes (%)"
+    "Adult literacy rate population 15+ years both sexes (%)",
+    "Youth literacy rate population 15-24 years both sexes (%)",
+    "Early school leavers from primary education both sexes (number)"
 ]
 ########## Plotting list of indicators
 
@@ -118,5 +93,38 @@ for indicator in indicators:
         ax2.legend(world_region_and_lowest)
 
 
+# Heatmap with GDP growths per countries
+fig, ax = plt.subplots()
+indicator = "GDP per capita (current US$)"
 
+df = total[total['IndicatorName'].isin([indicator])]
+df['GDP growth per capita'] = (df['2016'] / df['2015'] - 1) * 100
+df = df[df['GDP growth per capita'] > 0]
+countries = df['CountryName'].tolist()
+growths = df['GDP growth per capita'].tolist()
 
+# Create a data frame with fake data
+df_viz = pd.DataFrame({'growths':growths, 'country':countries})
+
+# plot it
+squarify.plot(sizes=df_viz['growths'], label=df_viz['country'], alpha=.8)
+plt.axis('off')
+plt.show() 
+
+# Heatmap with GNI growths per countries
+fig, ax = plt.subplots()
+indicator = "GNI (current US$)"
+
+df = total[total['IndicatorName'].isin([indicator])]
+df['GNI growth per capita'] = (df['2016'] / df['2015'] - 1) * 100
+df = df[df['GNI growth per capita'] > 0]
+countries = df['CountryName'].tolist()
+growths = df['GNI growth per capita'].tolist()
+
+# Create a data frame with fake data
+df_viz = pd.DataFrame({'growths':growths, 'country':countries})
+
+# plot it
+squarify.plot(sizes=df_viz['growths'], label=df_viz['country'], alpha=.8)
+plt.axis('off')
+plt.show() 

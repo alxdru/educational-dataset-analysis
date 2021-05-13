@@ -58,7 +58,7 @@ plot = figure(x_range=(0, 10), y_range=(0, 1), title='World Bank Educational Dat
 plot.xaxis.ticker = SingleIntervalTicker(interval=1)
 plot.xaxis.axis_label = "Unemployment total (% of total labor force)"
 plot.yaxis.ticker = SingleIntervalTicker(interval=10)
-plot.yaxis.axis_label = "Labor force (% of total)"
+plot.yaxis.axis_label = "Labor force (% of total population)"
 
 label = Label(x=1.1, y=18, text=str(years[0]), text_font_size='93px', text_color='#eeeeee')
 plot.add_layout(label)
@@ -101,7 +101,7 @@ def animate():
     global callback_id
     if button.label == '► Play':
         button.label = '❚❚ Pause'
-        callback_id = curdoc().add_periodic_callback(animate_update, 1000)
+        callback_id = curdoc().add_periodic_callback(animate_update, 500)
     else:
         button.label = '► Play'
         curdoc().remove_periodic_callback(callback_id)

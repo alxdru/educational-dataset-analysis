@@ -14,14 +14,8 @@ total=pd.read_csv('./total.csv')
 
 countries_list = ['World', "East Asia & Pacific", 'China', "Hong Kong", 'Japan', 'Macau', 'Mongolia', "Korea, Dem. People’s Rep.", "North Korea", "South Korea", 'Taiwan', 'Brunei', 'Cambodia', 'Indonesia', 'Malaysia', 'Myanmar', 'Philippines', 'Singapore', 'Thailand', 'Vietnam']
 
-# print(total.columns.tolist())
-# Forming Labor force (% of total) = Labor force, total/Population total * 100
-
-# total['Labor force (% of total)'] = total['Labor force total'] / total['Population total'] * 100
-
-
 ## First get the variables that I want to use in regression and forecast them
-years = list(map(lambda y: str(y), list(range(1970,2016))))
+years = list(map(lambda y: str(y), list(range(1990,2016))))
 all_years = []
 indicators = [
     "GDP per capita (current US$)",
@@ -36,7 +30,7 @@ final_dict = {}
 for indicator in indicators:
 
     all_countries = countries_list
-    all_years = list(map(lambda y: str(y), list(range(1990,2031))))
+    all_years = list(map(lambda y: str(y), list(range(1990,2016))))
 
     df_record = pd.DataFrame([], columns=['Country'] + all_years)
     world_vs_asia = total[total['IndicatorName'].isin([indicator])]
@@ -51,14 +45,9 @@ for indicator in indicators:
         if not data_country.empty:
             
             ## Forecasting additional 15 years as variable candidates for regression
-            data_list = data_country.iloc[:,0].tolist()
-            model = ARIMA(data_list, order=(1,0,0))
-            model_fit = model.fit()
-            data_predicted = model_fit.predict(start = len(data_list), end = len(data_list) + 14, typ='levels')
-     
-            all_data = data_list + data_predicted.tolist()
+            all_data = data_country.iloc[:,0].tolist()
 
-            df_forecast = pd.DataFrame([all_data], columns= list(map(lambda y: str(y), list(range(1970,2031)))))
+            df_forecast = pd.DataFrame([all_data], columns= list(map(lambda y: str(y), list(range(1990,2016)))))
 
             df_forecast['Country'] = country
             df_record = df_record.append(df_forecast, ignore_index=True)
